@@ -1,6 +1,6 @@
 
 ****************************
-python-package-template-repo
+Wildfire Emission Explorer
 ****************************
 
 |pypi_release| |pypi_status| |pypi_downloads| |docs|
