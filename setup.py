@@ -21,7 +21,7 @@ install_requires = ["numpy"]
 tests_require = ["pytest"]
 
 meta = {}
-exec(read("PACKAGE_NAME/__meta__.py"), meta)
+exec(read("code-emission-explorer/__meta__.py"), meta)
 
 
 setuptools.setup(
@@ -35,7 +35,7 @@ setuptools.setup(
     ),
     author_email=meta.get("__author_email__", "software.support@ecmwf.int"),
     license="Apache License Version 2.0",
-    url="https://github.com/esowc/python-package-template",
+    url="https://github.com/esowc/wildfire-explorer",
     packages=setuptools.find_packages(),
     include_package_data=True,
     install_requires=install_requires,

@@ -8,9 +8,9 @@
 
 """Container for project metadata."""
 
-__name__ = "PACKAGE_NAME"
+__name__ = "code-emission-explorer"
 __version__ = "0.1.dev0"
-__author__ = "European Centre for Medium-Range Weather Forecasts (ECMWF)"
-__author_email__ = "software.support@ecmwf.int"
+__author__ = "Ainhoa Murillo Iraola and Giovanni Paolini"
+__author_email__ = "giovanni.paolini.gp@gmail.com"
 __license__ = "Apache License Version 2.0"
 __description__ = ""
