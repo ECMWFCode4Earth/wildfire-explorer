@@ -1,6 +1,7 @@
 from shapely.geometry import Polygon, MultiPolygon, box, MultiLineString, LinearRing
 from shapely.ops import unary_union
 import yaml
+from pathlib import Path
 import pandas as pd
 import sys
 import datetime as dt
@@ -45,18 +46,7 @@ class config_file():
         else:
             dd['geometry'] = self.recompose_polygon_from_countriesnames(dd['geometry'])
         return dd
-    
-    def recompose_polygon_from_countriesnames(self, countries_names):
-        """From name(s) of a countries recompose a Polygon or Multipolygon.
-        INPUTS:
-         - countries_names: List or string with names of the countries in English.
-        OUTPUTS:
-         - geom: Polygon or Multipoligon geometry
-         """      
-        if isinstance(countries_names, list):
-            print('TBD')
-        return countries_names
-    
+        
     def country_search(self, country_shapefile, name):
         """From a GeoPandas shapefile with names of continents/countries as index, find the corresponding geometry 
         of 'name' and only return it if a single one is found."""
@@ -67,6 +57,13 @@ class config_file():
             raise ValueError(f"""The geometry name '{name}' contained in the config did not return a single result,
             N={len(elements_found)} matches were found. Please change this geometry name in the config and run again.""") 
     
+    def multiple_country_search(self, country_shapefile, countrynames):
+        all_geoms = []
+        for cname in countrynames.split('+'):
+            all_geoms.append(self.country_search(country_shapefile, cname))
+        return unary_union(all_geoms)
+            
+    
     def recompose_polygon_from_countriesnames(self, countries_names):
         """From name(s) of a countries recompose a Polygon or Multipolygon.
         INPUTS:
@@ -74,7 +71,6 @@ class config_file():
         OUTPUTS:
          - geom: Polygon or Multipoligon geometry
          """      
-
         # GET SHAPEFILE
         url_to_download    = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_map_units.zip"#"https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_50m_admin_0_countries.zip"
         file_path_location = '/home/esowc32/PROJECT/DATA/shapefiles/personalized_from_ne_110m_admin_0_map_units.geojson'
@@ -83,15 +79,16 @@ class config_file():
         countries.index = countries.GEOUNIT
         all_shapes = pd.concat([countries, sbcm.continent_shapefile.copy()])[['geometry','continent']]
         all_shapes = all_shapes.groupby(all_shapes.index).last()
-
-
         if isinstance(countries_names, list):
+            self.countryname = []
             all_geoms = []
             for name in countries_names:
-                all_geoms.append(self.country_search(all_shapes, name))
-            return unary_union(all_geoms)
+                all_geoms.append(self.multiple_country_search(all_shapes, name))
+            self.countryname = countries_names
+            return all_geoms
         elif isinstance(countries_names,str):
-            return self.country_search(all_shapes, name)
+            self.countryname = [countries_names]
+            return [self.multiple_country_search(all_shapes, countries_names)]
     
     def recompose_polygon_from_coordinates(self, mpolxy, polygon_type):
         """From list of x,y coords (If MultiPolygon is a list of tuples, like:[(x,y),...]) 
@@ -400,18 +397,55 @@ class plot_data():
         ipydisplay.display(html, clear= True )
         return anim
 
-    def create_plot_type(self):
-        plot_type = self.TOTAL_CONFIG['plot_type']
+    def create_plot_type(self, countryname):
+        config = self.TOTAL_CONFIG
+        plot_type = config['plot_type']
         """Creates the plot"""
         if plot_type == 'Line Plot':
             self.ax_sol = self.plot_lineplot(self.data_to_plot, self.ax_sol)
+            self.outfilename = f"LinePlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.png"
         elif plot_type == 'Bar Plot':
             self.ax_sol = self.plot_barplot(self.ax_sol, resolution = self.TOTAL_CONFIG['resolution'])
+            self.outfilename = f"BarPlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.png"
         elif plot_type == '2D Plot':
             self.ax_sol = self.plot_2dplot(self.data_to_plot, self.ax_sol, operation = self.TOTAL_CONFIG['aggregating_operation'])
+            self.outfilename = f"2DPlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.png"
         elif plot_type == '2D Animated Plot':
-            anim = self.animate_plot_2dplot(self.data_to_plot, self.ax_sol, operation = self.TOTAL_CONFIG['aggregating_operation'])
-            return anim, None
+            self.anim = self.animate_plot_2dplot(self.data_to_plot, self.ax_sol, operation = self.TOTAL_CONFIG['aggregating_operation'])
+            self.outfilename = f"2DAnimatedPlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.mp4"
+            return self.anim, None
         else:
             raise ValueError(f"""The plot type in the configuration file is not any of ['Line Plot','Bar Plot','2D Plot','2D Animated Plot']""")
         return self.fig_sol, self.ax_sol
+    
+    def save_plot(self):
+        plot_type = self.TOTAL_CONFIG['plot_type']
+        outfilepath = Path(self.TOTAL_CONFIG['output_folder']) / self.outfilename
+        if plot_type == '2D Animated Plot':
+            self.anim.save(outfilepath)
+        else:
+            self.fig_sol.savefig(outfilepath, dpi = 300, facecolor = 'w')
+    
+if __name__ == '__main__':
+    configfile = sys.argv[1]
+    cf = config_file(configfile) #('/home/esowc32/PROJECT/DATA/test_config.yml')
+    config = cf.TOTAL_CONFIG
+    # CHECK OUTPUT FOLDER
+    if not 'output_folder' in config.keys(): # if no path specified a new fodler is created in the current directory
+        config['output_folder'] = Path.cwd() / f"outfolder_query_{dt.datetime.now().strftime(format='%d%m%YT%H%M%S')}"
+    Path(config['output_folder']).mkdir(exist_ok= True, parents = True)
+
+    for geom, cname in zip(config['geometry'], cf.countryname):
+        print(cname)
+        config2 = config.copy()
+        config2.update({'geometry':geom})
+        print('query')
+        qd = query_data(config2)
+        table_database = qd.table_database
+        data = qd.data
+        print('plot')
+        plod = plot_data(config2, data, table_database)
+        plod.create_plot_type(cname)
+        plod.save_plot()
+    
+    
