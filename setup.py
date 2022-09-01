@@ -25,7 +25,6 @@ install_requires = [
     "pandas",
     "descartes",
     "numpy",
-    "ca-certificates",
     "openssl",
     "jupyter",
     "certifi",
