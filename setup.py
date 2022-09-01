@@ -18,7 +18,7 @@ def read(fname):
 
 
 install_requires = [
-    "python>=3.7",
+#     "python>=3.7",
     "ipympl",
     "geopandas",
     "matplotlib",
