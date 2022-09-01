@@ -17,7 +17,24 @@ def read(fname):
     return io.open(file_path, encoding="utf-8").read()
 
 
-install_requires = ["numpy"]
+install_requires = [
+    "python=3.7",
+    "ipympl",
+    "geopandas",
+    "matplotlib",
+    "pandas",
+    "descartes",
+    "numpy",
+    "ca-certificates",
+    "openssl",
+    "jupyter",
+    "certifi",
+    "voila",
+    "pyyaml",
+    "psycopg2",
+    "sqlalchemy",
+    "ipyleaflet"
+]
 tests_require = ["pytest"]
 
 meta = {}
