@@ -20,6 +20,10 @@ class GfasActivityReader(object):
             self.conn = psycopg2.connect("dbname='wfdb' user='wfuser' host='localhost'")
         except:
             print("I am unable to connect to the database")
+            
+        if self.conn is None:
+            raise ConnectionError("It was not possible to connect to the PostGIS database, please contact the administration to review permissions.")
+            
         self.cur = self.conn.cursor()
     
     def aggregate_by_cluster(self, data=None, res = 0.1, functions = None, columns_to_group = None):

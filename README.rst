@@ -5,8 +5,47 @@ Wildfire Emission Explorer
 
 |pypi_release| |pypi_status| |pypi_downloads| |docs|
 
-A template repository for developing Python packages
+An interface for quick analysis and reporting of wildfire emissions.
 
+<h2 id = "contents">Contents</h2>
+
+<details open = "open">
+  <ol>
+    <li><a href = "#description">Description</a></li>
+    <li><a href = "#installation">Installation</a></li>
+    <li><a href = "#cli-command">Low Level Modules</a></li>
+    <li><a href = "#highlevint">High Level Interface</a></li>
+    <li><a href = "#support">Support</a></li>
+  </ol>
+</details>
+
+<h2 id = "description" >1.Description</h2>
+
+#### Goal
+Create an application that simplifies and speeds up the creation of various wildfire emission plots based on a subset of the ECMWF dataset.
+The project consists of:
+1. lower-level modules with the basic functions needed to extract data and produce a figure from a configuration file.
+2.  higher-level interface for easily running the wildfire explorer in a notebook-like webpage.
+
+#### Data Specifications
+
+- **Dataset**: GFAS (Global Fire Assimilation System) from ECMWF.
+- **Resolution**: daily data at 0.1 deg.
+- **Period**: from January 2003 to present.
+- **Satellite dataset assimilated**: MODIS Terra and Aqua Active Fire Products.
+
+<h2 id = "installation">2. Installation</h2>
+
+#### Quick Install
+Download github repository and run 
+```
+conda env create -f environment.yml
+```
+
+<h2 id = "cli-command" >3. Low Level Modules</h2>       
+<h2 id = "highlevint" >4. High Level Interface</h2>       
+<h2 id = "support"     >5. Support</h2>                                             
+                         
 **Quick start**
 
 Follow these steps to create a new repository from this template.

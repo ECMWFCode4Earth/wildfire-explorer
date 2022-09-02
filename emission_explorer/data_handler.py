@@ -6,7 +6,6 @@ import pandas as pd
 import sys
 import datetime as dt
 import matplotlib.pyplot as plt
-import matplotlib
 import geopandas as gpd
 import mapclassify as mc
 from matplotlib.dates import DateFormatter
@@ -18,9 +17,11 @@ from IPython import display as ipydisplay
 # from IPython.display import HTML, display, FileLink
 
 ######local imports
-from Shapefile import subcountrymap
-sys.path.append("..")
-from PostGIS.GfasActivityReader import GfasActivityReader
+from emission_explorer.GUI.Shapefile import subcountrymap
+#from emission_explorer.GUI.Shapefile import subcountrymap
+# sys.path.append("..")
+from emission_explorer.PostGIS.GfasActivityReader import GfasActivityReader
+#from emission_explorer.PostGIS import GfasActivityReader
 
 
 class config_file():
@@ -74,7 +75,8 @@ class config_file():
          """      
         # GET SHAPEFILE
         url_to_download    = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_map_units.zip"#"https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_50m_admin_0_countries.zip"
-        file_path_location = '/home/esowc32/PROJECT/DATA/shapefiles/personalized_from_ne_110m_admin_0_map_units.geojson'
+        #file_path_location = '/home/esowc32/PROJECT/DATA/shapefiles/personalized_from_ne_110m_admin_0_map_units.geojson'
+        file_path_location = None
         sbcm = subcountrymap(file_path_location = file_path_location, url_to_download = url_to_download)
         countries  = sbcm.shapefile.copy()
         countries.index = countries.GEOUNIT
@@ -265,7 +267,7 @@ class plot_data():
         self.table_database = table_database
         self.data_to_plot   = data_to_plot
         
-        self.fig_sol, self.ax_sol = plt.subplots(figsize=(8, 5.3), dpi=1080/8) #figsize = (8,5),
+        self.fig_sol, self.ax_sol = plt.subplots(figsize = (8,5))
         self.fig_sol.tight_layout()
     
     def plot_lineplot(self, data, ax):
@@ -321,9 +323,7 @@ class plot_data():
         #extract limits
         ll = max(bb.bounds[2]-bb.bounds[0], bb.bounds[3]-bb.bounds[1])
         ## new squared geometry
-#         bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
-        bbnew = box(bb.bounds[0], bb.bounds[1], bb.bounds[2], bb.bounds[3])
-        
+        bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
         xmin,ymin,xmax, ymax = bbnew.buffer(2).bounds
         ## set limits new
         ax.set_xlim(xmin,xmax)
@@ -384,28 +384,14 @@ class plot_data():
         self.plot_2dplot(pp, ax_sol, title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}",
                     scheme=scheme, classification_kwds=classification_kwds,
                     )
-        
-        # set default legend text (first element)
-        leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
-        if leg:
-            leg=leg[0]
-            txt_or = leg.get_texts()[0].get_text()
-            leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
-        
         def animate(frame_num):
             #         text.value = f'2. Creating video {frame_num+1}/{len(indd)} completed'
             days = indd[frame_num]
             self.plot_2dplot(all_days.loc[days,:],
                         ax=ax_sol,
                         title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}", 
-                        background=False, scheme=scheme, classification_kwds=classification_kwds,
+                        background=False,scheme=scheme, classification_kwds=classification_kwds,
                        )
-            # set default legend text (first element)
-            leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
-            if leg:
-                leg=leg[0]
-                txt_or = leg.get_texts()[0].get_text()
-                leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
             return ax_sol
         plt.close()
         anim = FuncAnimation(fig_sol, animate, frames=len(indd), interval=250)
@@ -441,15 +427,12 @@ class plot_data():
         if plot_type == '2D Animated Plot':
             self.anim.save(outfilepath)
         else:
-            self.fig_sol.tight_layout()
-            self.fig_sol.savefig(outfilepath, facecolor = 'w')
-    
-if __name__ == '__main__':
-    # READ CONFIG FILE
+            self.fig_sol.savefig(outfilepath, dpi = 300, facecolor = 'w')
+
+def main():
     configfile = sys.argv[1]
     cf = config_file(configfile) #('/home/esowc32/PROJECT/DATA/test_config.yml')
     config = cf.TOTAL_CONFIG
-    
     # CHECK OUTPUT FOLDER
     if not 'output_folder' in config.keys(): # if no path specified a new fodler is created in the current directory
         config['output_folder'] = Path.cwd() / f"outfolder_query_{dt.datetime.now().strftime(format='%d%m%YT%H%M%S')}"
@@ -467,5 +450,6 @@ if __name__ == '__main__':
         plod = plot_data(config2, data, table_database)
         plod.create_plot_type(cname)
         plod.save_plot()
-    
-    
+
+if __name__ == '__main__':
+    main()
