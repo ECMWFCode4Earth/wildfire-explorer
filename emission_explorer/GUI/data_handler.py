@@ -6,6 +6,7 @@ import pandas as pd
 import sys
 import datetime as dt
 import matplotlib.pyplot as plt
+import matplotlib
 import geopandas as gpd
 import mapclassify as mc
 from matplotlib.dates import DateFormatter
@@ -264,7 +265,7 @@ class plot_data():
         self.table_database = table_database
         self.data_to_plot   = data_to_plot
         
-        self.fig_sol, self.ax_sol = plt.subplots(figsize = (8,5))
+        self.fig_sol, self.ax_sol = plt.subplots(figsize=(8, 5.3), dpi=1080/8) #figsize = (8,5),
         self.fig_sol.tight_layout()
     
     def plot_lineplot(self, data, ax):
@@ -320,7 +321,9 @@ class plot_data():
         #extract limits
         ll = max(bb.bounds[2]-bb.bounds[0], bb.bounds[3]-bb.bounds[1])
         ## new squared geometry
-        bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
+#         bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
+        bbnew = box(bb.bounds[0], bb.bounds[1], bb.bounds[2], bb.bounds[3])
+        
         xmin,ymin,xmax, ymax = bbnew.buffer(2).bounds
         ## set limits new
         ax.set_xlim(xmin,xmax)
@@ -381,14 +384,28 @@ class plot_data():
         self.plot_2dplot(pp, ax_sol, title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}",
                     scheme=scheme, classification_kwds=classification_kwds,
                     )
+        
+        # set default legend text (first element)
+        leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
+        if leg:
+            leg=leg[0]
+            txt_or = leg.get_texts()[0].get_text()
+            leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
+        
         def animate(frame_num):
             #         text.value = f'2. Creating video {frame_num+1}/{len(indd)} completed'
             days = indd[frame_num]
             self.plot_2dplot(all_days.loc[days,:],
                         ax=ax_sol,
                         title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}", 
-                        background=False,scheme=scheme, classification_kwds=classification_kwds,
+                        background=False, scheme=scheme, classification_kwds=classification_kwds,
                        )
+            # set default legend text (first element)
+            leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
+            if leg:
+                leg=leg[0]
+                txt_or = leg.get_texts()[0].get_text()
+                leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
             return ax_sol
         plt.close()
         anim = FuncAnimation(fig_sol, animate, frames=len(indd), interval=250)
@@ -424,12 +441,15 @@ class plot_data():
         if plot_type == '2D Animated Plot':
             self.anim.save(outfilepath)
         else:
-            self.fig_sol.savefig(outfilepath, dpi = 300, facecolor = 'w')
+            self.fig_sol.tight_layout()
+            self.fig_sol.savefig(outfilepath, facecolor = 'w')
     
 if __name__ == '__main__':
+    # READ CONFIG FILE
     configfile = sys.argv[1]
     cf = config_file(configfile) #('/home/esowc32/PROJECT/DATA/test_config.yml')
     config = cf.TOTAL_CONFIG
+    
     # CHECK OUTPUT FOLDER
     if not 'output_folder' in config.keys(): # if no path specified a new fodler is created in the current directory
         config['output_folder'] = Path.cwd() / f"outfolder_query_{dt.datetime.now().strftime(format='%d%m%YT%H%M%S')}"
