@@ -93,7 +93,6 @@ class subcountrymap():
         """
         If a 'file_path_location' exists it reads the shapefile directly from there into a geopandas.GeoDataFrame.
         """
-        
         if self.file_path_location.exists(): # check if there is actually a shapefile in the location
             self.shapefile = gpd.read_file(self.file_path_location)
             return True
@@ -120,8 +119,8 @@ class subcountrymap():
                 assert 'continent' in self.shapefile.columns
                 self.shapefile.to_file(self.file_path_location, driver = driver)
                 
-        else:
-            print(f'the file {self.file_path_location.name} already exists!')        
+#         else:
+#             print(f'the file {self.file_path_location.name} already exists!')        
         
     def add_continent_to_shapefile(self):
         """When workng with 'ne_110m_admin_0_map_units.zip', since it has no continent value per country, it is added searching in the 
