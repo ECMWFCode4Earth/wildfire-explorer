@@ -47,9 +47,9 @@ class GfasActivityReader(object):
         else:
             level = 0
         # add geometry column
-        data_aggr['geometry'] = pd.Series(data_aggr.index.get_level_values(level),
+        geom = pd.Series(data_aggr.index.get_level_values(level),
                                       index=data_aggr.index).apply(get_boxes_from_index)
-        data_aggr = gpd.GeoDataFrame(data_aggr, crs = 'EPSG:4326')
+        data_aggr = gpd.GeoDataFrame(data_aggr, geometry = geom, crs = 'EPSG:4326')
 
         #rename columns (transform multicolumns in columns)
         new_cols = ['_'.join(tt) for tt in data_aggr.columns]
