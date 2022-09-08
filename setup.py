@@ -37,7 +37,7 @@ install_requires = [
 tests_require = ["pytest"]
 
 meta = {}
-exec(read("code-emission-explorer/__meta__.py"), meta)
+exec(read("emission-explorer/__meta__.py"), meta)
 
 
 setuptools.setup(
