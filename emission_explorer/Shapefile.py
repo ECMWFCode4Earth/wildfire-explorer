@@ -14,7 +14,7 @@ class subcountrymap():
                  add_continent:bool = True) -> None:
         
         if file_path_location is None: #use current directory as location (it will be used tosave the shapefile)
-            self.file_path_location = Path(f"./{url_to_download.split('/')[-1]}")
+            self.file_path_location = Path.cwd() / url_to_download.split('/')[-1] #Path(f"./{url_to_download.split('/')[-1]}")
         else: #filepath used to read OR save the shapefile
             self.file_path_location = Path(file_path_location)
         self.driver = driver
