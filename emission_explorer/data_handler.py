@@ -8,6 +8,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import geopandas as gpd
 import mapclassify as mc
+import matplotlib
 from matplotlib.dates import DateFormatter
 from matplotlib.animation import FuncAnimation
 from IPython import display as ipydisplay
@@ -17,10 +18,10 @@ from IPython import display as ipydisplay
 # from IPython.display import HTML, display, FileLink
 
 ######local imports
-from emission_explorer.GUI.Shapefile import subcountrymap
+from emission_explorer.Shapefile import subcountrymap
 #from emission_explorer.GUI.Shapefile import subcountrymap
 # sys.path.append("..")
-from emission_explorer.PostGIS.GfasActivityReader import GfasActivityReader
+from emission_explorer.GfasActivityReader import GfasActivityReader
 #from emission_explorer.PostGIS import GfasActivityReader
 
 
@@ -223,39 +224,44 @@ class query_data():
             return data.copy()
             
     def create_dataset_query(self):
-        """Main functions that decides how to query the daat from the Database depending on the plot needed."""
+        """Main functions that decides how to query the data from the Database depending on the plot needed.
+        '2D Animated Plot' and 'Line Plot'
+            query a DataFrame that contains every da of the specific reference period 
+        
+        
+        """
         aggregating_operation = self.TOTAL_CONFIG['aggregating_operation']
         var = self.table_database[self.TOTAL_CONFIG['variable']][1] 
 
-        if self.TOTAL_CONFIG['plot_type'] =='2D Animated Plot':
+        if (self.TOTAL_CONFIG['plot_type'] =='2D Animated Plot'):
             data_to_plot = self.extract_data(start_date = self.TOTAL_CONFIG['specific_start_date'], 
                                         end_date = self.TOTAL_CONFIG['specific_end_date'], 
                                         function_to_aggregate = aggregating_operation,
                                         keep_separate_dates = True, 
                                         reference_period = False)
         else:
+            if self.TOTAL_CONFIG['plot_type'] =='Line Plot':
+                keep_separate_dates = True
+            else:
+                keep_separate_dates = False
+                
             data_to_plot = self.extract_data(start_date = self.TOTAL_CONFIG['specific_start_date'],
                                         end_date = self.TOTAL_CONFIG['specific_end_date'],
-                                        function_to_aggregate = aggregating_operation)
+                                        function_to_aggregate = aggregating_operation,
+                                        keep_separate_dates = keep_separate_dates)
             #ADD reference period
             if (self.TOTAL_CONFIG['reference_start_date']!='') & (self.TOTAL_CONFIG['reference_end_date']!='') & (self.TOTAL_CONFIG['plot_type'] !='2D Plot'):
                 reference_data = self.extract_data(start_date = self.TOTAL_CONFIG['reference_start_date'],
                                               end_date = self.TOTAL_CONFIG['reference_end_date'],
                                               reference_period = True,
-                                              function_to_aggregate = aggregating_operation
+                                              function_to_aggregate = aggregating_operation,
+                                              keep_separate_dates = keep_separate_dates
                                              )
                 reference_data.rename(columns={c: f'REFERENCE: {c}' for c in reference_data.columns}, inplace=True)
-                data_to_plot   = pd.merge( reference_data,data_to_plot, left_index=True, right_index=True)
+                data_to_plot   = pd.merge( reference_data, data_to_plot, left_index=True, right_index=True, how = 'outer')
             data_to_plot   = data_to_plot.sort_index()
         return data_to_plot
     
-    
-#             fig_sol, ax_sol = plot_config(data_to_plot, operation = aggregating_operation)
-            
-#             data_to_save   = data_to_plot.copy()
-            
-#             if self.TOTAL_CONFIG['plot_type'] !='2D Plot':
-#                 data_to_save.index = [f"{dd.day:02d}-{dd.strftime('%b')}" for dd in data_to_save.index]
 
 class plot_data():
     def __init__(self, 
@@ -267,23 +273,34 @@ class plot_data():
         self.table_database = table_database
         self.data_to_plot   = data_to_plot
         
-        self.fig_sol, self.ax_sol = plt.subplots(figsize = (8,5))
+        self.fig_sol, self.ax_sol = plt.subplots(figsize=(8, 5.3), dpi=1080/8, constrained_layout=True,
+                                                gridspec_kw = dict(width_ratios = [1], height_ratios = [1])) #figsize = (8,5),
         self.fig_sol.tight_layout()
     
     def plot_lineplot(self, data, ax):
         """Creates a lineplot with quantiles (from 0 to 100 with different steps) for each day of the year."""
         ddoy = data.groupby(data.index.dayofyear)
         quantiles = [0, 0.1, 0.25, .5, .75, 0.9, 1]
+#         quantiles = [0, .5,  1]
+
+        #check if there is a reference column in the data dataFrame
+        reference_cols = [f for f in data.columns if 'REFERENCE' in f]
+        if reference_cols:
+            d2 = ddoy.quantile(0.5).dropna()[[c for c in data.columns if c not in reference_cols]]
+            d2.index = [pd.to_datetime(f'2000{f:03d}', format = '%Y%j') for f in d2.index]
+            d2 = d2.rename(columns = {c: f'Mean period of interest - {c}' for c in d2.columns})
+            ax = d2.plot(ax=ax, lw = 2.5, zorder = 100)
+
         for p in quantiles:
-            d = ddoy.quantile(p)
+            d = ddoy.quantile(p).dropna()[reference_cols]
             d.rename(columns={c: f'p={p}%-{c}' for c in d.columns}, inplace=True)
             d.index = [pd.to_datetime(f'2000{f:03d}', format = '%Y%j') for f in d.index]
-            if quantiles.index(p) == 0:
-                ax = d.plot(ax=ax)
-            else:
-                d.plot(ax=ax)
-        dfmt = DateFormatter("%d-%b") # proper formatting Year-month-day
+    #         if quantiles.index(p) == 0:
+            ax = d.plot(ax=ax)
+        dfmt = DateFormatter("%d\n%b") # proper formatting Year-month-day
         ax.xaxis.set_major_formatter(dfmt)
+        ax.legend(loc='lower left',bbox_to_anchor=(0.2, 1))
+        ax.get_figure().tight_layout()
         return ax
 
     def plot_barplot(self, ax, title = None, resolution = None):
@@ -293,7 +310,7 @@ class plot_data():
         if title is None:
             title = f"{self.TOTAL_CONFIG['variable']}"
 
-        self.data_to_plot.plot.bar(ax=ax, color = ['#A9A9A9','#B22222','y'])
+        self.data_to_plot.dropna().plot.bar(ax=ax, color = ['#A9A9A9','#B22222','y'])
         if resolution =='daily': # for daily data
             ax.set_xticklabels([f'{pd.Timestamp(f.get_text()).day:02d}-{pd.Timestamp(f.get_text()).month_name()}' for f in ax.get_xticklabels()])
             ax.locator_params(axis='x', nbins=12)
@@ -323,14 +340,15 @@ class plot_data():
         #extract limits
         ll = max(bb.bounds[2]-bb.bounds[0], bb.bounds[3]-bb.bounds[1])
         ## new squared geometry
-        bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
+#         bbnew = box(bb.centroid.x-ll/2,bb.centroid.y-ll/2,bb.centroid.x+ll/2,bb.centroid.y+ll/2)
+        bbnew = box(bb.bounds[0], bb.bounds[1], bb.bounds[2], bb.bounds[3])
         xmin,ymin,xmax, ymax = bbnew.buffer(2).bounds
         ## set limits new
         ax.set_xlim(xmin,xmax)
         ax.set_ylim(ymin,ymax)
         return ax
 
-    def plot_2dplot(self, data, ax, operation = 'sum', title = None, background = True, vmin=None, vmax=None, scheme='quantiles', classification_kwds=None):
+    def plot_2dplot(self, data, ax, operation = 'sum', title = None, background = False, vmin=None, vmax=None, scheme='quantiles', classification_kwds=None):
         """Creates the 2D plot using the datas in 'self.data_to_plot' """
 
         table_name = self.table_database[self.TOTAL_CONFIG['variable']][1]
@@ -346,7 +364,7 @@ class plot_data():
 
         if background:
             ax = self.plot2dbackground(ax)
-
+            
         data.plot(column_name_to_plot,
                      ax=ax, 
                      cmap='OrRd',#'RdYlBu_r', 
@@ -357,12 +375,11 @@ class plot_data():
                      legend_kwds = dict(
                          loc='center left', 
                          bbox_to_anchor=(1, 0.5),
-                         title = legend_name, fmt = '{:.1e}')
+                         title = legend_name,
+                         fmt = '{:.1e}'
+                     )
                       )
         ax.set_title(title)
-        fig = ax.get_figure()
-        fig.tight_layout()
-        # correction: remove for first element of the legend which is always [-inf, 0]
         return ax
 
     def animate_plot_2dplot(self, all_days, ax_sol, operation = 'sum'):
@@ -379,11 +396,19 @@ class plot_data():
         pp = all_days.loc[[indd[0]],:]
 
         fig_sol = ax_sol.get_figure()
-        fig_sol.tight_layout()
-
+        
         self.plot_2dplot(pp, ax_sol, title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}",
-                    scheme=scheme, classification_kwds=classification_kwds,
+                    background=True, scheme=scheme, classification_kwds=classification_kwds,
                     )
+        # set default legend text (first element)
+        leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
+        if leg:
+            leg=leg[0]
+            txt_or = leg.get_texts()[0].get_text()
+            leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
+            ax_sol.set_aspect('equal')
+            fig_sol.tight_layout()
+            
         def animate(frame_num):
             #         text.value = f'2. Creating video {frame_num+1}/{len(indd)} completed'
             days = indd[frame_num]
@@ -392,6 +417,14 @@ class plot_data():
                         title = f"{self.TOTAL_CONFIG['variable']}\n{days.day:02d}-{days.month:02d}-{days.year}", 
                         background=False,scheme=scheme, classification_kwds=classification_kwds,
                        )
+            # set default legend text (first element)
+            leg = [lg for lg in ax_sol.get_children() if isinstance(lg, matplotlib.legend.Legend)]
+            if leg:
+                ax_sol.set_aspect('equal')
+                ax_sol.get_figure().tight_layout()
+                leg=leg[0]
+                txt_or = leg.get_texts()[0].get_text()
+                leg.get_texts()[0].set_text(f"0, {txt_or.split(',')[1]}")
             return ax_sol
         plt.close()
         anim = FuncAnimation(fig_sol, animate, frames=len(indd), interval=250)
@@ -411,7 +444,8 @@ class plot_data():
             self.ax_sol = self.plot_barplot(self.ax_sol, resolution = self.TOTAL_CONFIG['resolution'])
             self.outfilename = f"BarPlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.png"
         elif plot_type == '2D Plot':
-            self.ax_sol = self.plot_2dplot(self.data_to_plot, self.ax_sol, operation = self.TOTAL_CONFIG['aggregating_operation'])
+            self.ax_sol = self.plot_2dplot(self.data_to_plot, self.ax_sol,
+                                           background=True, operation = self.TOTAL_CONFIG['aggregating_operation'])
             self.outfilename = f"2DPlot_{countryname}_from{config['specific_start_date']}to{config['specific_end_date']}.png"
         elif plot_type == '2D Animated Plot':
             self.anim = self.animate_plot_2dplot(self.data_to_plot, self.ax_sol, operation = self.TOTAL_CONFIG['aggregating_operation'])
