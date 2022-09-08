@@ -8,7 +8,7 @@
 
 """Container for project metadata."""
 
-__name__ = "emission-explorer"
+__name__ = "emission_explorer"
 __version__ = "0.1.dev0"
 __author__ = "Ainhoa Murillo Iraola and Giovanni Paolini"
 __author_email__ = "giovanni.paolini.gp@gmail.com"
