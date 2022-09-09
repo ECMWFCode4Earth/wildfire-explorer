@@ -67,7 +67,7 @@ The best way to explore wildfire data and use this project is through its user i
 
 This will open the notebook Official_UI_v0.1.ipynb present in this repository and guide the user into creating and saving different plots. This GIF shows the GUI capability.
 
-.. image:: https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/GUI/images_gui/GIF_GUI_WildfireExplorer.gif
+.. image:: https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/GUI/images_gui/GIF_GUI_WildfireExplorer_3MB.gif
   :alt: GUI Demo
 
 5. Acknowledgments
