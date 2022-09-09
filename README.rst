@@ -1,8 +1,6 @@
 Wildfire Emission Explorer
 --------------
 
-|pypi_release| |pypi_status| |pypi_downloads| |docs|
-
 An interface for quick analysis and reporting of wildfire emissions.
 
 1. Description
@@ -29,84 +27,49 @@ Data Specifications
 -  **Satellite dataset assimilated**: MODIS Terra and Aqua Active Fire
    Products.
 
+These data are stored in a PostGIS database (present locally in the ECMWF servers), which optimize the retrievel of these large amount of data. A preliminary study on the database performance is presented `here <https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/PostGIS/Database_Exploration_Phase.ipynb>`_ and `here <https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/PostGIS/Database_Exploration_v2.ipynb>`_, in the form of jupyter notebooks.
+
 2. Installation
 --------------
 
 Quick Install
 ^^^^^^^^^^^^^
 
-Download github repository and run
+The file `environment.yml <https://github.com/esowc/wildfire-explorer/blob/master/environment.yml>`_ contains all the dependencies for this project. 
+To run this project: 1) create a new environment using `conda  <https://docs.conda.io/en/latest/>`_ or `mamba <https://mamba.readthedocs.io/en/latest/>`_, 2) Install this repository through pip. Specific commands:
 
 ::
 
-   conda env create -f environment.yml
+   conda env create -f environment.yml --name=<your-env-name>
+   conda activate <your env name>
+   pip install git+https://github.com/esowc/wildfire-explorer.git #installs the specific modules developed for this project
 
-3. Low Level Modules
+3. CLI command
 --------------
+It is possible to create quick plots directly using the CLI comands (no interface) and recursively producing plots for different countries as listed in the configuration file. In addition, the data can also be saved in separate csv file to reproduce again the plots. To run the cli, after installation use the following command:
+::
 
-4. High Level Interface
+   wildfire_explorer <path-to-file>/example_config.yml
+
+the `example_config.yml https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/example_config.yml>`_ presented in this repository contains all the details about the parameters that can be changed by the user. 
+
+This command is equivalent to running this line in the main folder of the repository:
+::
+
+   python data_handler.py <path-to-file>/example_config.yml
+
+4. High-Level Interface
 --------------
+The best way to explore wildfire data and use this project is through its user interface, built as a jupyter notebook and visible with the following `voilá <https://voila.readthedocs.io/en/stable/>`_  command:
+::
 
-5. Support
+   voila <additional-path-to-file>/Official_UI_v0.1.ipynb
+
+This will open the notebook Official_UI_v0.1.ipynb present in this repository and guide the user into creating and saving different plots. This GIF shows the GUI capability.
+
+.. image:: https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/GUI/images_gui/GIF_GUI_WildfireExplorer.gif
+  :alt: GUI Demo
+
+5. Acknowledgments
 --------------
-
-**Quick start**
-
-Follow these steps to create a new repository from this template.
-
-#. Click the `Use this template <https://github.com/esowc/python-package-template/generate>`_
-   button and create a new repository with your desired name, location and visibility.
-
-#. Clone the repository::
-
-     git clone git@github.com:esowc/<your-repository-name>.git
-     cd <your-repository-name>
-
-#. Remove sample code::
-
-     rm PACKAGE_NAME/sample.py
-     rm tests/test_sample.py
-
-#. Replace ``PACKAGE_NAME`` with your chosen package name::
-
-     NEW_PACKAGE_NAME=<your-package-name>
-     mv PACKAGE_NAME $NEW_PACKAGE_NAME
-     sed -i "" "s/PACKAGE_NAME/$NEW_PACKAGE_NAME/g" setup.py \
-        docs/source/conf.py \
-        docs/source/getting_started/installing.rst \
-        docs/source/index.rst \
-        $NEW_PACKAGE_NAME/__meta__.py
-
-#. Modify the contents of ``__meta__.py`` to reflect your repository. Note that there
-   is no need to update this same information in ``setup.py``, as it will be imported
-   directly from ``__meta__.py``.
-
-#. Modify the project url in ``setup.py`` to reflect your project's home in GitHub.
-
-#. Modify ``README.rst`` to reflect your repository. A number of `shield <https://shields.io/>`_
-   templates are included, and will need to be updated to match your repository if you want
-   to use them.
-
-**Usage tips**
-
-* Create an executable called ``qa`` containing the following::
-
-    black .
-    isort .
-
-  Add this to your path, and run it from the top-level of your repository before
-  committing changes::
-
-    qa .
-
-.. |pypi_release| image:: https://img.shields.io/pypi/v/thermofeel?color=green
-    :target: https://pypi.org/project/thermofeel
-
-.. |pypi_status| image:: https://img.shields.io/pypi/status/thermofeel
-    :target: https://pypi.org/project/thermofeel
-
-.. |pypi_downloads| image:: https://img.shields.io/pypi/dm/thermofeel
-  :target: https://pypi.org/project/thermofeel
-  
-.. |docs| image:: https://readthedocs.org/projects/thermofeel/badge/?version=latest
-  :target: https://thermofeel.readthedocs.io/en/latest/?badge=latest
+This project has been developed as part of the `ECMWF Summer of Weather Code <https://esowc.ecmwf.int/>`_ and proposes a solution for challenge `#32 <https://github.com/esowc/challenges_2022/issues/10>`_.
