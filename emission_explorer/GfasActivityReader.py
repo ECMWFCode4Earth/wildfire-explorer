@@ -6,6 +6,7 @@ from shapely.geometry import box
 import matplotlib.pyplot as plt
 import psycopg2
 from shapely import wkt
+from sqlalchemy import create_engine
 # ST_MakePolygon(ST_GeomFromText('LINESTRING(-88.4646835327148 40.2789344787598 231.220825195312, -88.4761428833008 40.2101783752441 223.626693725586,-88.4646835327148 40.2159080505371 235.470901489258,-88.4646835327148 40.2789344787598 231.220825195312,-88.4646835327148 40.2789344787598 231.220825195312)')), 4326)
 
 
@@ -17,15 +18,17 @@ class GfasActivityReader(object):
     def __init__(self):
         
         try:
-            self.conn = psycopg2.connect("dbname='wfdb' user='wfuser' host='localhost'")
+            connection_string = "dbname='wfdb' user='wfuser' host='localhost'"
+            # self.conn = psycopg2.connect(connection_string)
+            engine = create_engine('postgresql+psycopg2://wfuser@localhost/wfdb')
+            self.conn = engine
         except:
             print("I am unable to connect to the database")
             
         if self.conn is None:
             raise ConnectionError("It was not possible to connect to the PostGIS database, please contact the administration to review permissions.")
-            
-        self.cur = self.conn.cursor()
-    
+        # self.cur = self.conn.cursor()
+		
     def aggregate_by_cluster(self, data=None, res = 0.1, functions = None, columns_to_group = None):
         """Transform a GeoDataFrame of points geometry into square of resolution of 'res' degrees". All points contained in the grid
         of 'res' degrees are aggregated together"""   
@@ -39,7 +42,7 @@ class GfasActivityReader(object):
                                                        (np.floor(data.geometry.y*factor))/factor)]
         if 'clust' not in columns_to_group:
             columns_to_group.append('clust')
-        data_aggr = data.groupby(columns_to_group).agg(functions)
+        data_aggr = data[[col for col in data.columns if 'geom' not in col]].groupby(columns_to_group).agg(functions)
 
         # just to check if the index is a multiindex
         if isinstance(data_aggr.index.values[0],tuple):
@@ -150,9 +153,9 @@ class GfasActivityReader(object):
         return data, data_aggregated
 
 
-    def __del__(self):
-        self.cur.close()
-        self.conn.close()
+    #def __del__(self):
+    #    self.cur.close()
+    #    self.conn.close()
 
 
 def main():

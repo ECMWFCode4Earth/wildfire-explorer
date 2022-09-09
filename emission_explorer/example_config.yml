@@ -1,0 +1,12 @@
+aggregating_operation: sum                                # {sum, mean, max, min, std}
+geometry: [ 'Spain+Portugal+Austria','France', 'Italy']   # Any country spelled in English and inside a list (Multiple countries in a single plot using +, e.g. ['Spain+Portugal+Austria','France', 'Italy'])
+plot_type: 2D Plot                                        # {2D Plot, 2D Animated Plot, Line Plot, Bar Plot}
+polygon_type: multipolygon                                
+reference_end_date: 30-06-2021
+reference_start_date: 01-06-2003
+resolution: daily                                         # {daily, monthly}
+specific_end_date: 30-06-2022
+specific_start_date: 01-06-2022
+variable: Wildfire radiative power                        # {'Wildfire flux of Carbon Dioxide', 'Wildfire flux of Carbon Monoxide', 'Wildfire flux of Methane', 'Wildfire flux of Nitrogen Oxides NOx', 'Wildfire flux of Particulate Matter PM2.5', 'Wildfire flux of Total Particulate Matter', 'Wildfire flux of Total Carbon in Aerosols', 'Wildfire flux of Organic Carbon', 'Wildfire flux of Black Carbon', 'Wildfire overall flux of burnt Carbon', 'Wildfire radiative power', 'Wildfire Flux of Ammonia (NH3)'}
+add_csv_results: True                                     # {True, False} 
+output_folder: /home/esowc32/PROJECT/DATA/output_test

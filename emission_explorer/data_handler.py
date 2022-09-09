@@ -273,7 +273,7 @@ class plot_data():
         self.table_database = table_database
         self.data_to_plot   = data_to_plot
         
-        self.fig_sol, self.ax_sol = plt.subplots(figsize=(8, 5.3), dpi=1080/8, constrained_layout=True,
+        self.fig_sol, self.ax_sol = plt.subplots(figsize=(8, 5.3), dpi=1080/8, # constrained_layout=True,
                                                 gridspec_kw = dict(width_ratios = [1], height_ratios = [1])) #figsize = (8,5),
         self.fig_sol.tight_layout()
     
@@ -461,7 +461,16 @@ class plot_data():
         if plot_type == '2D Animated Plot':
             self.anim.save(outfilepath)
         else:
+            self.fig_sol.tight_layout()
             self.fig_sol.savefig(outfilepath, dpi = 300, facecolor = 'w')
+            
+    def save_csv(self):
+        plot_type = self.TOTAL_CONFIG['plot_type']
+        outfilepath = Path(self.TOTAL_CONFIG['output_folder']) / (self.outfilename.split('.')[0]+'.csv')
+        data_to_save = self.data_to_plot
+        if '2D' not in plot_type: # only change index if the plot requires it (Lineplor and BarPlot)
+            data_to_save.index = [f"{dd.day:02d}-{dd.strftime('%b')}" for dd in data_to_save.index]
+        data_to_save.to_csv(outfilepath)
 
 def main():
     configfile = sys.argv[1]
@@ -471,7 +480,11 @@ def main():
     if not 'output_folder' in config.keys(): # if no path specified a new fodler is created in the current directory
         config['output_folder'] = Path.cwd() / f"outfolder_query_{dt.datetime.now().strftime(format='%d%m%YT%H%M%S')}"
     Path(config['output_folder']).mkdir(exist_ok= True, parents = True)
-
+    
+    if 'add_csv_results' in config.keys():
+        save_csv = config['add_csv_results']  
+        #config.pop('add_csv_results')
+    
     for geom, cname in zip(config['geometry'], cf.countryname):
         print(cname)
         config2 = config.copy()
@@ -484,6 +497,8 @@ def main():
         plod = plot_data(config2, data, table_database)
         plod.create_plot_type(cname)
         plod.save_plot()
+        if save_csv:
+            plod.save_csv()   
 
 if __name__ == '__main__':
     main()

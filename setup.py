@@ -69,6 +69,9 @@ setuptools.setup(
         "Programming Language :: Python :: Implementation :: PyPy",
         "Operating System :: OS Independent",
     ],
+	entry_points={
+        'console_scripts': ['wildfire_explorer=emission_explorer.data_handler:main']
+    },
     tests_require=tests_require,
     test_suite="tests",
 )
