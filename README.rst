@@ -51,7 +51,7 @@ It is possible to create quick plots directly using the CLI comands (no interfac
 
    wildfire_explorer <path-to-file>/example_config.yml
 
-the `example_config.yml https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/example_config.yml>`_ presented in this repository contains all the details about the parameters that can be changed by the user. 
+the `example_config.yml <https://github.com/esowc/wildfire-explorer/blob/master/emission_explorer/example_config.yml>`_ presented in this repository contains all the details about the parameters that can be changed by the user. 
 
 This command is equivalent to running this line in the main folder of the repository:
 ::
