@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import psycopg2
 from shapely import wkt
 from sqlalchemy import create_engine
+from sshtunnel import SSHTunnelForwarder
+
 # ST_MakePolygon(ST_GeomFromText('LINESTRING(-88.4646835327148 40.2789344787598 231.220825195312, -88.4761428833008 40.2101783752441 223.626693725586,-88.4646835327148 40.2159080505371 235.470901489258,-88.4646835327148 40.2789344787598 231.220825195312,-88.4646835327148 40.2789344787598 231.220825195312)')), 4326)
 
 
@@ -17,10 +19,16 @@ class GfasActivityReader(object):
 
     def __init__(self):
         
+        server = SSHTunnelForwarder(
+            ('cams-data', 22),
+             remote_bind_address=('127.0.0.1', 5432)
+            )
+
+        server.start()
+        local_port = str(server.local_bind_port)
+
         try:
-            connection_string = "dbname='wfdb' user='wfuser' host='localhost'"
-            # self.conn = psycopg2.connect(connection_string)
-            engine = create_engine('postgresql+psycopg2://wfuser@localhost/wfdb')
+            engine = create_engine(f'postgresql+psycopg2://wfuser@127.0.0.1:{local_port}/wfdb')
             self.conn = engine
         except:
             print("I am unable to connect to the database")
