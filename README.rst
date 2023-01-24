@@ -42,7 +42,7 @@ To run this project: 1) create a new environment using `conda  <https://docs.con
 
    conda env create -f environment.yml --name=<your-env-name>
    conda activate <your env name>
-   pip install git+https://github.com/esowc/wildfire-explorer.git #installs the specific modules developed for this project
+   pip install git+https://github.com/esowc/wildfire-explorer.git@develop #installs the develop branch of this project
 
 3. CLI command
 --------------
