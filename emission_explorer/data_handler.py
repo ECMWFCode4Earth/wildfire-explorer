@@ -36,18 +36,19 @@ class config_file():
             raise ValueError(""""The configuration file is not specified, it is not possible to run the wildfire emission explorer app.""")
         
         self.TOTAL_CONFIG = self.read_config()
-    
+
     def read_config(self):    
         """Reads the config yaml file and transforms the indicated geometry in a shapely.geometry"""
         with open(self.DEFAULT_CONFIG_FILE) as src:
             dd = yaml.load(src, yaml.loader.FullLoader)
+        print("DDD ---- ", dd.keys())
         if isinstance(dd['geometry'], list):
             if not isinstance(dd['geometry'][0], str):
                 dd['geometry'] = self.recompose_polygon_from_coordinates(dd['geometry'], dd['polygon_type'])
             else:
-                dd['geometry'] = self.recompose_polygon_from_countriesnames(dd['geometry'])
+                dd['geometry'] = self.recompose_polygon_from_countriesnames(dd['geometry'], dd['output_folder'])
         else:
-            dd['geometry'] = self.recompose_polygon_from_countriesnames(dd['geometry'])
+            dd['geometry'] = self.recompose_polygon_from_countriesnames(dd['geometry'], dd['output_folder'])
         return dd
         
     def country_search(self, country_shapefile, name):
@@ -67,7 +68,7 @@ class config_file():
         return unary_union(all_geoms)
             
     
-    def recompose_polygon_from_countriesnames(self, countries_names):
+    def recompose_polygon_from_countriesnames(self, countries_names, output_folder=None):
         """From name(s) of a countries recompose a Polygon or Multipolygon.
         INPUTS:
          - countries_names: List or string with names of the countries in English.
@@ -75,10 +76,10 @@ class config_file():
          - geom: Polygon or Multipoligon geometry
          """      
         # GET SHAPEFILE
-        url_to_download    = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_map_units.zip"#"https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_50m_admin_0_countries.zip"
+        url_to_download = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_map_units.zip"#"https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_50m_admin_0_countries.zip"
         #file_path_location = '/home/esowc32/PROJECT/DATA/shapefiles/personalized_from_ne_110m_admin_0_map_units.geojson'
-        file_path_location = None
-        sbcm = subcountrymap(file_path_location = file_path_location, url_to_download = url_to_download)
+        file_path_location = Path(output_folder) / 'personalized_from_ne_110m_admin_0_map_units.geojson'
+        sbcm = subcountrymap(file_path_location=file_path_location, url_to_download=url_to_download)
         countries  = sbcm.shapefile.copy()
         countries.index = countries.GEOUNIT
         all_shapes = pd.concat([countries, sbcm.continent_shapefile.copy()])[['geometry','continent']]
@@ -328,8 +329,8 @@ class plot_data():
         
         # GET SHAPEFILE
         url_to_download    = "https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_110m_admin_0_map_units.zip"#"https://www.naturalearthdata.com/http//www.naturalearthdata.com/download/110m/cultural/ne_50m_admin_0_countries.zip"
-        file_path_location = '/home/esowc32/PROJECT/DATA/shapefiles/personalized_from_ne_110m_admin_0_map_units.geojson'
-        sbcm = subcountrymap(file_path_location = file_path_location, url_to_download = url_to_download)
+        file_path_location = Path(self.TOTAL_CONFIG['output_folder']) / 'personalized_from_ne_110m_admin_0_map_units.geojson'
+        sbcm = subcountrymap(file_path_location=file_path_location, url_to_download=url_to_download)
         countries  = sbcm.shapefile.copy()
         countries.index = countries.GEOUNIT
         all_shapes = pd.concat([countries, sbcm.continent_shapefile.copy()])[['geometry','continent']]
@@ -348,7 +349,7 @@ class plot_data():
         ax.set_ylim(ymin,ymax)
         return ax
 
-    def plot_2dplot(self, data, ax, operation = 'sum', title = None, background = False, vmin=None, vmax=None, scheme='quantiles', classification_kwds=None):
+    def plot_2dplot(self, data, ax, operation = 'sum', title=None, background=False, vmin=None, vmax=None, scheme='quantiles', classification_kwds=None):
         """Creates the 2D plot using the datas in 'self.data_to_plot' """
 
         table_name = self.table_database[self.TOTAL_CONFIG['variable']][1]
