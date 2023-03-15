@@ -35,14 +35,15 @@ These data are stored in a PostGIS database (present locally in the ECMWF server
 Quick Install
 ^^^^^^^^^^^^^
 
-The file `environment.yml <https://github.com/esowc/wildfire-explorer/blob/master/environment.yml>`_ contains all the dependencies for this project. 
+The file `environment.yml <https://github.com/esowc/wildfire-explorer/blob/develop/environment.yml>`_ contains all the dependencies for this project. 
 To run this project: 1) create a new environment using `conda  <https://docs.conda.io/en/latest/>`_ or `mamba <https://mamba.readthedocs.io/en/latest/>`_, 2) Install this repository through pip. Specific commands:
 
 ::
 
+   wget https://github.com/esowc/wildfire-explorer/blob/develop/environment.yml
    conda env create -f environment.yml --name=<your-env-name>
    conda activate <your env name>
-   pip install git+https://github.com/esowc/wildfire-explorer.git@develop #installs the develop branch of this project
+   pip install git+https://github.com/esowc/wildfire-explorer.git@develop # installs the develop branch of this project
 
 3. CLI command
 --------------
